@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"encoding/json"
 	"time"
+	"io/ioutil"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
@@ -53,6 +55,14 @@ func main() {
 			return
 		}
 
+		pasporList = readDataFromJSON()
+			for _, paspor := range pasporList {
+				if paspor.NIK == nikEntry.Text {
+					dialog.ShowInformation("Informasi", "NIK sudah terdaftar.", myWindow)
+					return
+				}
+			} 
+
 		// Simpan data paspor ke dalam list
 		paspor := DataPaspor{
 			Kategori:       kategoriEntry.Selected,
@@ -66,6 +76,9 @@ func main() {
 			WaktuPembuatan: time.Now(),
 		}
 		pasporList = append(pasporList, paspor)
+
+		// Write data to JSON file
+		writeDataToJSON(pasporList)	
 
 		// Reset formulir
 		kategoriEntry.SetSelected("")
@@ -120,4 +133,16 @@ func showSubmitDialog(window fyne.Window, paspor DataPaspor) {
 	)
 
 	dialog.ShowCustom("Data Paspor", "Close", content, window)
+}
+
+func writeDataToJSON(data []DataPaspor) {
+	file, _ := json.MarshalIndent(data, "", " ")
+	_ = ioutil.WriteFile("data_paspor.json", file, 0644)
+}
+
+func readDataFromJSON() []DataPaspor {
+	file, _ := ioutil.ReadFile("data_paspor.json")
+	var data []DataPaspor
+	_ = json.Unmarshal(file, &data)
+	return data
 }
